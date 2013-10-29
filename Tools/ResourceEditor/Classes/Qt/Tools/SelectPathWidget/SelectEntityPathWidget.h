@@ -53,6 +53,16 @@ protected:
 
 	void dragEnterEvent(QDragEnterEvent* event);
 	
+	static void ConvertQMimeDataFromSceneTree(const QMimeData* mimeData, DAVA::List<DAVA::Entity*>&,
+											  SceneEditor2* sceneEditor = NULL);
+	
+	static void ConvertQMimeDataFromFilePath(const QMimeData* mimeData, DAVA::List<DAVA::Entity*>&,
+											 SceneEditor2* sceneEditor = NULL);
+	
+	void ConvertFromMimeData(const QMimeData* mimeData, DAVA::List<DAVA::Entity*>& retList, SceneEditor2* sceneEditor);
+	
+	
+	DAVA::Map<DAVA::String, void (*) (const QMimeData* mimeData, DAVA::List<DAVA::Entity*> & nameList, SceneEditor2* sceneEditor)> cornvertionFuncMap;
 };
 
 #endif /* defined(__RESOURCEEDITORQT__SELECENTITYTPATHWIDGET__) */
