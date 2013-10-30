@@ -96,7 +96,16 @@ void SelectEntityPathWidget::ConvertFromMimeData(const QMimeData* mimeData, DAVA
 
 void SelectEntityPathWidget::ConvertQMimeDataFromSceneTree(const QMimeData* mimeData, DAVA::List<DAVA::Entity*>& retList, SceneEditor2* sceneEditor)
 {
-	retList = MimeDataHelper::GetPointersFromSceneTreeMime(mimeData);
+	List<Entity*> list = MimeDataHelper::GetPointersFromSceneTreeMime(mimeData);
+	Q_FOREACH(Entity* item, list)
+	{
+		if(item)
+		{
+			Entity *e = item->Clone();
+			retList.push_back(e);
+			//e->Release();
+		}
+	}
 }
 
 void SelectEntityPathWidget::ConvertQMimeDataFromFilePath(const QMimeData* mimeData,DAVA::List<DAVA::Entity*>& retList,
@@ -119,7 +128,9 @@ void SelectEntityPathWidget::ConvertQMimeDataFromFilePath(const QMimeData* mimeD
 			continue;
 		}
 		
-		DAVA::Entity * entity = sceneEditor->GetRootNode(filePath);
+		DAVA::Entity * entity = sceneEditor->structureSystem->Load(filePath,true);
+		//DAVA::Entity * entity = sceneEditor->structureSystem->Add(filePath);
+		
 		if(NULL != entity)
 		{
 			retList.push_back(entity);

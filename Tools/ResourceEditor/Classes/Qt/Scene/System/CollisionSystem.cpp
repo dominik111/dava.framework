@@ -433,6 +433,7 @@ void SceneCollisionSystem::AddEntity(DAVA::Entity * entity)
 	{
 		entitiesToRemove.erase(entity);
 		entitiesToAdd.insert(entity);
+		//Update(0);
 
 		// build collision object for entity childs
 		for(int i = 0; i < entity->GetChildrenCount(); ++i)

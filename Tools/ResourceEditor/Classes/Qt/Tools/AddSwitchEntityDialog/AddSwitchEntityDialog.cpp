@@ -129,28 +129,16 @@ void AddSwitchEntityDialog::accept()
 	{
 		if(item)
 		{
-			Entity *e = item->Clone();
-			switchEntity->AddNode(e);
-			e->Release();
+			switchEntity->AddNode(item);
+			SafeRelease(item);
 		}
 	}
 	
 	EntityAddCommand* command = new EntityAddCommand(switchEntity, scene);
 	scene->Exec(command);
 	scene->ImmediateEvent(switchEntity, Component::SWITCH_COMPONENT, EventSystem::SWITCH_CHANGED);
-	
-	/*for (DAVA::int32 i = 0; i < switchEntity->GetChildrenCount(); i++)
-	{
-		DAVA::Entity *childEntity = switchEntity->GetChild(i);
-		scene->collisionSystem->UpdateCollisionObject(childEntity);
-	}*/
-	
-	//scene->collisionSystem->UpdateCollisionObject(switchEntity);
-	scene->selectionSystem->SetSelection(switchEntity);
-	
-	EntityGroup selection = scene->selectionSystem->GetSelection();
-	scene->cameraSystem->LookAt(selection.GetCommonBbox());
-	
+
+	scene->selectionSystem->SetSelection(switchEntity);	
 	BaseAddEntityDialog::accept();
 }
 
