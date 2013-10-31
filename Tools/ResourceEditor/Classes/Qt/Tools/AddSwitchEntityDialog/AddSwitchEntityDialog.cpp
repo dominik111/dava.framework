@@ -130,7 +130,6 @@ void AddSwitchEntityDialog::accept()
 		if(item)
 		{
 			switchEntity->AddNode(item);
-			SafeRelease(item);
 		}
 	}
 	

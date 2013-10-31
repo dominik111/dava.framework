@@ -35,14 +35,22 @@
 #include <QFileDialog>
 #include <QStyle>
 
+#define MIME_ENTITY_NAME "application/dava.entity"
+#define MIME_EMITER_NAME "application/dava.emitter"
+#define MIME_URI_LIST_NAME "text/uri-list"
+
 SelectEntityPathWidget::SelectEntityPathWidget(QWidget* _parent, DAVA::String _openDialogDefualtPath, DAVA::String _relativPath)
 :	SelectPathWidgetBase(_parent, _openDialogDefualtPath, _relativPath, "Open Scene File", "Scene File (*.sc2)")
 {
-	cornvertionFuncMap["application/dava.entity"] = &SelectEntityPathWidget::ConvertQMimeDataFromSceneTree;
-	cornvertionFuncMap["application/dava.emitter"] = &SelectEntityPathWidget::ConvertQMimeDataFromSceneTree;
-	cornvertionFuncMap["text/uri-list"] = &SelectEntityPathWidget::ConvertQMimeDataFromFilePath;
-	
 	allowedFormatsList.push_back(".sc2");
+}
+
+SelectEntityPathWidget::~SelectEntityPathWidget()
+{
+	Q_FOREACH(DAVA::Entity* item, entitiesToHold)
+	{
+		SafeRelease(item);
+	}
 }
 
 void SelectEntityPathWidget::dragEnterEvent(QDragEnterEvent* event)
@@ -53,7 +61,7 @@ void SelectEntityPathWidget::dragEnterEvent(QDragEnterEvent* event)
 	}
 	bool isFormatSupported = true;
 	
-	if(event->mimeData()->hasFormat("text/uri-list"))
+	if(event->mimeData()->hasFormat(MIME_URI_LIST_NAME))
 	{
 		isFormatSupported= false;
 		DAVA::FilePath path(event->mimeData()->urls().first().toString().toStdString());
@@ -83,33 +91,26 @@ DAVA::Entity* SelectEntityPathWidget::GetOutputEntity(SceneEditor2* editor)
 
 void SelectEntityPathWidget::ConvertFromMimeData(const QMimeData* mimeData, DAVA::List<DAVA::Entity*>& retList, SceneEditor2* sceneEditor)
 {
-	DAVA::Map<DAVA::String, void (*) (const QMimeData* mimeData, DAVA::List<DAVA::Entity*> & nameList, SceneEditor2* sceneEditor)>::iterator it;
-	
-	for(it = cornvertionFuncMap.begin(); it != cornvertionFuncMap.end(); ++it)
+	if(mimeData->hasFormat(MIME_ENTITY_NAME) || mimeData->hasFormat(MIME_EMITER_NAME))
 	{
-		if(mimeData->hasFormat(QString(it->first.c_str())))
-		{
-			it->second(mimeData, retList, sceneEditor);
-		}
+		ConvertQMimeDataFromSceneTree(mimeData, retList);
+	}
+	else if(mimeData->hasFormat(MIME_URI_LIST_NAME))
+	{
+		ConvertQMimeDataFromFilePath(mimeData, retList, sceneEditor);
 	}
 }
 
-void SelectEntityPathWidget::ConvertQMimeDataFromSceneTree(const QMimeData* mimeData, DAVA::List<DAVA::Entity*>& retList, SceneEditor2* sceneEditor)
+void SelectEntityPathWidget::ConvertQMimeDataFromSceneTree(const QMimeData* mimeData,
+														   DAVA::List<DAVA::Entity*>& retList)
 {
-	List<Entity*> list = MimeDataHelper::GetPointersFromSceneTreeMime(mimeData);
-	Q_FOREACH(Entity* item, list)
-	{
-		if(item)
-		{
-			Entity *e = item->Clone();
-			retList.push_back(e);
-			//e->Release();
-		}
-	}
+	retList  = MimeDataHelper::GetPointersFromSceneTreeMime(mimeData);
+	SetEntities(retList, true);
 }
 
-void SelectEntityPathWidget::ConvertQMimeDataFromFilePath(const QMimeData* mimeData,DAVA::List<DAVA::Entity*>& retList,
-												  SceneEditor2* sceneEditor)
+void SelectEntityPathWidget::ConvertQMimeDataFromFilePath(const QMimeData* mimeData,
+														  DAVA::List<DAVA::Entity*>& retList,
+														  SceneEditor2* sceneEditor)
 {
 	if(mimeData == NULL || sceneEditor == NULL || !mimeData->hasUrls())
 	{
@@ -129,11 +130,30 @@ void SelectEntityPathWidget::ConvertQMimeDataFromFilePath(const QMimeData* mimeD
 		}
 		
 		DAVA::Entity * entity = sceneEditor->structureSystem->Load(filePath,true);
-		//DAVA::Entity * entity = sceneEditor->structureSystem->Add(filePath);
 		
 		if(NULL != entity)
 		{
 			retList.push_back(entity);
 		}
 	}
+	// for just created entities no need to increase refCouner
+	// it will be released in ~SelectEntityPathWidget()
+	SetEntities(retList, false);
+}
+
+void SelectEntityPathWidget::SetEntities(const DAVA::List<DAVA::Entity*>& list, bool perfromRertain)
+{
+	Q_FOREACH(DAVA::Entity* item, entitiesToHold)
+	{
+		SafeRelease(item);
+	}
+	entitiesToHold = list;
+	if(perfromRertain)
+	{
+		Q_FOREACH(DAVA::Entity* item, entitiesToHold)
+		{
+			SafeRetain(item);
+		}
+	}
+		
 }

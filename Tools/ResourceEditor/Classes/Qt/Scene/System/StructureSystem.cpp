@@ -315,6 +315,31 @@ void StructureSystem::Reload(const EntityGroup& entityGroup, const DAVA::FilePat
 	}
 }
 
+
+void StructureSystem::Reload(const DAVA::FilePath &oldModelPath, const DAVA::FilePath &newModelPath, bool saveLightmapSettings)
+{
+	SceneEditor2* sceneEditor = (SceneEditor2*) GetScene();
+	if(NULL != sceneEditor)
+	{
+		EntityGroup group;
+
+		// reload only 1 level childs
+		for (int i = 0; i < sceneEditor->GetChildrenCount(); i++)
+		{
+			DAVA::Entity *entity = sceneEditor->GetChild(i);
+			if(NULL != entity->GetCustomProperties())
+			{
+				if(DAVA::FilePath(entity->GetCustomProperties()->GetString(ResourceEditor::EDITOR_REFERENCE_TO_OWNER)) == oldModelPath)
+				{
+					group.Add(entity);
+				}
+			}
+		}
+
+		Reload(group, newModelPath, saveLightmapSettings);
+	}
+}
+
 void StructureSystem::Add(const DAVA::FilePath &newModelPath, const DAVA::Vector3 pos)
 {
 	SceneEditor2* sceneEditor = (SceneEditor2*) GetScene();
@@ -467,6 +492,23 @@ void StructureSystem::MarkLocked(DAVA::Entity *entity)
 		for(int i = 0; i < entity->GetChildrenCount(); ++i)
 		{
 			MarkLocked(entity->GetChild(i));
+		}
+	}
+}
+
+void SearchByReference(DAVA::Entity *entity, const DAVA::FilePath &ref, EntityGroup &result)
+{
+	if(NULL != entity)
+	{
+		DAVA::KeyedArchive *arch = entity->GetCustomProperties();
+		if(DAVA::FilePath(arch->GetString(ResourceEditor::EDITOR_REFERENCE_TO_OWNER, "")) == ref)
+		{
+			result.Add(entity);
+		}
+
+		for(int i = 0; i < entity->GetChildrenCount(); i++)
+		{
+			SearchByReference(entity->GetChild(i), ref, result);
 		}
 	}
 }
