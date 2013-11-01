@@ -63,10 +63,7 @@ protected:
 	void ConvertFromMimeData(const QMimeData* mimeData, DAVA::List<DAVA::Entity*>& retList, SceneEditor2* sceneEditor);
 	
 	void SetEntities(const DAVA::List<DAVA::Entity*>& list, bool perfromRertain);
-	
-	//DAVA::Map<DAVA::String, void (*) (const QMimeData* mimeData, DAVA::List<DAVA::Entity*> & nameList, SceneEditor2* sceneEditor)> cornvertionFuncMap;
-	
-	
+		
 	DAVA::List<DAVA::Entity*> entitiesToHold;
 };
 

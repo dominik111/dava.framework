@@ -64,7 +64,7 @@ void SelectEntityPathWidget::dragEnterEvent(QDragEnterEvent* event)
 	if(event->mimeData()->hasFormat(MIME_URI_LIST_NAME))
 	{
 		isFormatSupported= false;
-		DAVA::FilePath path(event->mimeData()->urls().first().toString().toStdString());
+		DAVA::FilePath path(event->mimeData()->urls().first().toLocalFile().toStdString());
 		Q_FOREACH(DAVA::String item, allowedFormatsList)
 		{
 			if(path.IsEqualToExtension(item))
